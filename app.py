@@ -1,15 +1,21 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, request, redirect
+from cs50 import SQL
 
 app = Flask(__name__)
 
-students = [
-    {"name": "Sandrine", "score": 100},
-    {"name": "Gergeley", "score": 87},
-    {"name": "Frieda", "score": 92},
-    {"name": "Fritz", "score": 40},
-    {"name": "Sirius", "score": 75},
-]
+db = SQL("sqlite:///score.db")
 
-@app.route("/")
+@app.route("/", methods=["GET", "POST"])
 def index():
-    return render_template("index.html", students=students)
+    if request.method == "POST": 
+        name = request.form.get("name")
+        score = request.form.get("score")
+
+        db.execute("INSERT INTO score (name, score) VALUES(?, ?)", name, score)
+
+        return redirect("/")
+
+    else:
+
+        students = db.execute("SELECT * FROM score")
+        return render_template("index.html", students=students)
