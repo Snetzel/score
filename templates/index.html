@@ -27,11 +27,15 @@
                 <tr>
                     <th>Name</th>
                     <th>Score</th>
+                    <th>Edit</th>
                 </tr>
                 {% for student in students %}
                 <tr>
                     <td>{{ student.name }}</td>
                     <td>{{ student.score }}</td>
+                    <td>
+                        <a href="/edit/{{ student['id'] }}">Edit</a>
+                    </td>
                 </tr>
                 {% endfor %}
             </table>
