@@ -6,8 +6,7 @@ from werkzeug.security import check_password_hash, generate_password_hash
 
 app = Flask(__name__)
 
-db = SQL("sqlite:///score.db")
-udb = SQL("sqlite:///user.db")
+db = SQL("sqlite:///user.db")
 app.config.update(SECRET_KEY=os.urandom(24))
 
 @app.route("/", methods=["GET", "POST"])
@@ -50,7 +49,7 @@ def register():
             return "must provide username"
         elif not request.form.get("password"):
             return "must provide password"
-        rows = udb.execute("SELECT * FROM user WHERE username = ?", request.form.get("username"))
+        rows = db.execute("SELECT * FROM user WHERE username = ?", request.form.get("username"))
 
         email = request.form.get("email")
         name_user = request.form.get("name_user")
@@ -62,9 +61,9 @@ def register():
         if len(rows) == 1:
             return "username already taken"
         if password == rpassword:
-            udb.execute("INSERT INTO user (username, password) VALUES(?, ?)", username, hash)
+            db.execute("INSERT INTO user (username, password) VALUES(?, ?)", username, hash)
 
-            registered_user = udb.execute("select * from user where username = ?", username)
+            registered_user = db.execute("select * from user where username = ?", username)
             session["id"] = registered_user[0]["id"]
             flash("you were sucessfully registered")
             return redirect("/")
@@ -75,3 +74,29 @@ def register():
         
     else:
         return render_template("register.html")
+    
+@app.route("/login", methods=['POST', 'GET'])
+def login():
+    """Log user in"""
+    session.clear()
+    if request.method == "POST":
+        if not request.form.get("username"):
+            return "Isikan username"
+        elif not request.form.get("password"):
+            return "Isikan password"
+        rows = db.execute("SELECT * FROM user WHERE username = ?", request.form.get("username"))
+
+        if len(rows) != 1 or not check_password_hash(rows[0]["password"], request.form.get("password")):
+            return "username atau password yang anda masukan salah"
+        
+        session["user_id"] = rows[0]["id"]
+        return redirect("/")
+    else:
+        return render_template("login.html")
+
+@app.route("/logout")
+def logout():
+    """Log user out"""
+
+    session.clear()
+    return redirect("/")
